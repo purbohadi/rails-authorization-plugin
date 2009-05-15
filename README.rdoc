@@ -510,3 +510,54 @@ http://github.com/DocSavage/rails-authorization-plugin/tree/master/UPGRADE.rdoc
 == Developers Note : Contributing Patches
 
 Please see the file README_developers.txt for the methods we would like you to use to submit new code features, bugfixes and patches.
+
+== Feature added by xinuc
+
+This version of rails-authorization-plugin will check if the object has a method
+named the role-in-question which return a user-like object, then will check if the
+returned object is the <tt>current_user</tt>.
+
+Suppose a user can write many posts. Only the poster and moderator can edit the posts.
+
+  class Post < ActiveRecord::Base
+    belongs_to :user
+    acts_as_authorizable
+    ...
+  end
+  
+  class User < ActiveRecord::Base
+    has_many :posts
+    acts_as_authorized_user
+    ...
+  end
+
+We can check <tt>post.accepts_role? "user", user</tt> without redefine the role to the user object.
+This way, we can set the permission :
+
+  class PostController < ApplicationController
+    permit "user of :post or moderator", :only => [:edit, :update]
+    ...
+  end
+
+Ofcourse you can use rename the method so it will make more sense
+
+  class Post
+    belongs_to :user
+    acts_as_authorizable
+    
+    def poster
+      user
+    end
+    ...
+  end
+
+so:
+
+  class PostController < ApplicationController
+    permit "poster of :post or moderator", :only => [:edit, :update]
+    ...
+  end
+
+However, it can be somewhat dangerous. Imagine if you call <tt>post.accepts_role? "destroy", user</tt>
+Just don't do it ;-). I believe that this addition will not make it into the master project, 
+so I won't make any pull request.

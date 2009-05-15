@@ -24,6 +24,7 @@ module Authorization
           if authorizable_obj.nil?
             self.roles.find_by_name( role_name ) || self.roles.member?(get_role( role_name, authorizable_obj )) ? true : false    # If we ask a general role question, return true if any role is defined.
           else
+            return true if authorizable_obj.respond_to?(role_name) && (authorizable_obj.send(role_name) == self)
             role = get_role( role_name, authorizable_obj )
             role ? self.roles.exists?( role.id ) : false
           end
